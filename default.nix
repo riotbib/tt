@@ -1,16 +1,16 @@
 with import <nixpkgs> {};
 
 stdenv.mkDerivation rec {
-  name = "et";
+  name = "tt";
 
   src = lib.cleanSource ./.;
 
-  buildInputs = [ libnotify gdk_pixbuf ];
-  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ libnotify gdk-pixbuf ];
+  nativeBuildInputs = [ pkg-config ];
 
   installPhase = ''
     mkdir -p $out/bin
-    cp et $out/bin
-    cp et-status.sh $out/bin/et-status
+    cp tt $out/bin
+    cp tt-status.sh $out/bin/tt-status
   '';
 }

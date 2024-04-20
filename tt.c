@@ -18,12 +18,12 @@
 /* Flag variables */
 volatile bool timer_state  = true;
 volatile bool status_state = false;
-volatile bool kill_state   = false;
+volatile bool cancel_state   = false;
 
 /* Variable to store the timer's values. */
 struct itimerval timer;
 
-/* Optional describing name of this et-instance. */
+/* Optional describing name of this tt-instance. */
 char *instance_name;
 
 /* Signal handler-functions */
@@ -39,8 +39,8 @@ void status_request_handler(int sig) {
     DIE("Could not re-register signal handler.\n");
 }
 
-void kill_handler(int sig) {
-  kill_state = true;
+void cancel_handler(int sig) {
+  cancel_state = true;
   UNUSED(sig);
 }
 
@@ -121,8 +121,8 @@ unsigned int parse_time(char *time_str) {
 }
 
 /* Prints help to stdout and exits. */
-void print_help(char *et_name, int exit_status) {
-  printf("Usage: %s TIME [NAME]\n", et_name);
+void print_help(char *tt_name, int exit_status) {
+  printf("Usage: %s TIME [NAME]\n", tt_name);
   printf("  TIME is a timestamp formated like H:M:S, M:S or S.\n");
   printf("  NAME is an optional identifier.\n\n");
   exit(exit_status);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
   unsigned int sec;
   char *start_msg, *start_msg_time;
 
-  if (!notify_init("et") || !notify_is_initted())
+  if (!notify_init("tt") || !notify_is_initted())
     DIE("Could not initialize libnotify.\n");
 
   if (argc < 2 || argc > 3)
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     print_help(argv[0], EXIT_SUCCESS);
 
   sec = parse_time(argv[1]);
-  instance_name = (argc == 2) ? "egg timer" : argv[2];
+  instance_name = (argc == 2) ? "Terror timer" : argv[2];
 
   /* There may be obscure timing issues otherwise.. */
   if (sec == 0)
@@ -154,8 +154,8 @@ int main(int argc, char *argv[]) {
   /* Enable signal handlers */
   if (signal(SIGALRM, time_over_handler)      == SIG_ERR ||
       signal(SIGUSR1, status_request_handler) == SIG_ERR ||
-      signal(SIGINT,  kill_handler)           == SIG_ERR ||
-      signal(SIGHUP,  kill_handler)           == SIG_ERR)
+      signal(SIGINT,  cancel_handler)           == SIG_ERR ||
+      signal(SIGHUP,  cancel_handler)           == SIG_ERR)
     DIE("Could not register signal handlers.\n");
 
   if (!(start_msg = malloc(96)) || !(start_msg_time = malloc(110)))
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     DIE("Could not setitimer.\n");
 
   create_text_timestamp(start_msg_time, 96, timer.it_value.tv_sec);
-  printf("Egg timer started!\nName: %s, PID: %d\n%s\n",
+  printf("Terror timer started!\nName: %s, PID: %d\n%s\n",
     instance_name, getpid(), start_msg_time);
 
   strcpy(start_msg, "Timer started\n");
@@ -186,9 +186,9 @@ int main(int argc, char *argv[]) {
       status_request_worker();
       status_state = false;
     }
-    if (kill_state) {
-      show_notification("Timer was killed!", NOTIFY_URGENCY_NORMAL);
-      DIE("Timer was killed!\n");
+    if (cancel_state) {
+      show_notification("Timer was cancelled!", NOTIFY_URGENCY_NORMAL);
+      DIE("Timer was cancelled!\n");
     }
   } while (timer_state);
 
